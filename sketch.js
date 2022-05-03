@@ -8,12 +8,12 @@
 // declarar variable para puerto serial
 let serial;
 
-// declarar variable para datos recibidos
-let datosRecibidos = "esperando...";
-
 // declarar variable con nombre de puerto de Arduino
 // actualizar con nombre del puerto en tu computador
 let nombrePuerto = "/dev/tty.usbmodem143301";
+
+// declarar variable para datos recibidos
+let datosRecibidos = "esperando...";
 
 // setup() ocurre una vez al principio
 function setup() {
