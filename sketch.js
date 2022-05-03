@@ -1,120 +1,125 @@
-// Declare a "SerialPort" object
-let serial;
-let latestData = "waiting for data";  // you'll use this to write incoming data to the canvas
+// clase-08-ejemplo-p5js-texto
+// codigo adaptado desde ejemplo base de p5-serialcontrol
+// por montoyamoraga
+// v0.0.1 mayo 2022
+// hecho con p5.js y p5.serialport.js
+// basado en ejemplo https://github.com/p5-serial/p5.serialport/tree/master/examples/basics
 
+// declarar variable para puerto serial
+let serial;
+
+// declarar variable para datos recibidos
+let datosRecibidos = "esperando...";
+
+// declarar variable con nombre de puerto de Arduino
+// actualizar con nombre del puerto en tu computador
+let nombrePuerto = "/dev/tty.usbmodem143301";
+
+// setup() ocurre una vez al principio
 function setup() {
+
+  // lienzo del tamaño del navegador
   createCanvas(windowWidth, windowHeight);
 
-  // Instantiate our SerialPort object
+  // crear instancia de puerto serial
   serial = new p5.SerialPort();
 
-  // Get a list the ports available
-  // You should have a callback defined to see the results
+  // obtener una lista de los puertos disponibles
   serial.list();
 
-  // Assuming our Arduino is connected, let's open the connection to it
-  // Change this to the name of your arduino's serial port
-  serial.open("/dev/tty.usbmodem143301");
+  // asumimos que microcontrolador Arduino está conectado
+  // y abrimos la conexión al puerto especificado
+  serial.open(nombrePuerto);
 
-  // Here are the callbacks that you can register
-  // When we connect to the underlying server
-  serial.on('connected', serverConnected);
+  // callback cuando recibimos "connected"
+  // correr función servidorConectado
+  serial.on('connected', servidorConectado);
+  
+  // callback cuando recibimos "list"
+  // corremos función listaRecibida
+  serial.on('list', listaRecibida);
 
-  // When we get a list of serial ports that are available
-  serial.on('list', gotList);
-  // OR
-  //serial.onList(gotList);
+  //callback cuando recibimos "data"
+  // corremos función recibirDatos
+  serial.on('data', recibirDatos);
 
-  // When we some data from the serial port
-  serial.on('data', gotData);
-  // OR
-  //serial.onData(gotData);
+  // callback cuando recibimos "error"
+  // corremos función recibirError
+  serial.on('error', recibirError);
 
-  // When or if we get an error
-  serial.on('error', gotError);
-  // OR
-  //serial.onError(gotError);
+  // callback cuando recibimos "open"
+  // corremos función recibirApertura
+  serial.on('open', recibirApertura);
 
-  // When our serial port is opened and ready for read/write
-  serial.on('open', gotOpen);
-  // OR
-  //serial.onOpen(gotOpen);
+  // callback cuando recibimos "close"
+  // corremos función recibirCierre
+  serial.on('close', recibirCierre);
 
-  serial.on('close', gotClose);
-
-  // Callback to get the raw data, as it comes in for handling yourself
-  //serial.on('rawdata', gotRawData);
-  // OR
-  //serial.onRawData(gotRawData);
 }
 
-// We are connected and ready to go
-function serverConnected() {
-  print("Connected to Server");
+// función para indicar que servidor está conectado
+function servidorConectado() {
+  print("servidor conectado");
 }
 
 // Got the list of ports
-function gotList(thelist) {
-  print("List of Serial Ports:");
-  // theList is an array of their names
-  for (let i = 0; i < thelist.length; i++) {
-    // Display in the console
-    print(i + " " + thelist[i]);
+function listaRecibida(lista) {
+
+  print("lista de puertos seriales:");
+  
+  // iterar sobre cada elemento
+  for (let i = 0; i < lista.length; i++) {
+
+    // imprimir en consola
+    print(i + " " + lista[i]);
+
   }
 }
 
 // Connected to our serial device
-function gotOpen() {
-  print("Serial Port is Open");
+function recibirApertura() {
+  print("puerto serial está abierto");
 }
 
-function gotClose(){
-    print("Serial Port is Closed");
-    latestData = "Serial Port is Closed";
+function recibirCierre(){
+    print("puerto serial está cerrado");
+    datosRecibidos = "puerto serial está cerrado";
 }
 
-// Ut oh, here is an error, let's log it
-function gotError(theerror) {
-  print(theerror);
+// si hay un error, imprimirlo
+function recibirError(error) {
+  print(error);
 }
 
-// There is data available to work with from the serial port
-function gotData() {
-  let currentString = serial.readLine();  // read the incoming string
-  trim(currentString);                    // remove any trailing whitespace
-  if (!currentString) return;             // if the string is empty, do no more
-  console.log(currentString);             // print the string
-  latestData = currentString;            // save it for the draw method
+// si tenemos datos desde el puerto serial
+function recibirDatos() {
+  
+  // leer línea de datos de entrada
+  let entrada = serial.readLine();
+
+  // borrar espacios
+  trim(entrada);
+
+  // si la línea está vacía, no hacer nada
+  if (!entrada) return;
+
+  // imprimir los datos en consola
+  console.log(entrada);
+  
+  // actualizar variable datosRecibidos
+  datosRecibidos = entrada;
 }
 
-// We got raw from the serial port
-function gotRawData(thedata) {
-  print("gotRawData" + thedata);
-}
-
-// Methods available
-// serial.read() returns a single byte of data (first in the buffer)
-// serial.readChar() returns a single char 'A', 'a'
-// serial.readBytes() returns all of the data available as an array of bytes
-// serial.readBytesUntil('\n') returns all of the data available until a '\n' (line break) is encountered
-// serial.readString() retunrs all of the data available as a string
-// serial.readStringUntil('\n') returns all of the data available as a string until a specific string is encountered
-// serial.readLine() calls readStringUntil with "\r\n" typical linebreak carriage return combination
-// serial.last() returns the last byte of data from the buffer
-// serial.lastChar() returns the last byte of data from the buffer as a char
-// serial.clear() clears the underlying serial buffer
-// serial.available() returns the number of bytes available in the buffer
-// serial.write(somevar) writes out the value of somevar to the serial device
-
+// draw() ocurre en bucle, después de setup()
 function draw() {
-  background(255,255,255);
-  fill(0,0,0);
-  text(latestData, 10, 10);
-  // Polling method
-  /*
-  if (serial.available() > 0) {
-  let data = serial.read();
-  ellipse(50,50,data,data);
-}
-*/
+
+  // fondo blanco
+  background(255);
+
+  // relleno negro
+  fill(0);
+
+  // texto datos recibidos en posición 10, 10
+  text(datosRecibidos, 10, 10);
+  
 }
